@@ -1,0 +1,83 @@
+
+public function add_lab_info_entry()
+{
+    $by = $this->common->user_session_data(1);
+
+    $dept_id = $_POST['dept_id'];
+    $lab_info_text = $_POST['lab_info_text'];
+
+    if (!empty($dept_id) && !empty($lab_info_text)) {
+        $lab_info_info = array(
+            'title' => $_POST['lab_info_title'],
+            'dept_id' => $dept_id,
+            'description' => $lab_info_text,
+            'posted_by' => $by,
+        );
+
+        /*image upload*/
+        if ($_FILES['lab_info_image']['name'] !== '') {
+
+            $config['upload_path'] = './assets/images/lab_info/';
+            $config['allowed_types'] = 'jpg|jpeg|png|gif';
+            $config['max_size'] = '200000';
+            $config['max_width'] = '1524000';
+            $config['max_height'] = '1000000';
+            $this->upload->initialize($config);
+            $this->load->library('upload', $config);
+            $this->load->library('image_lib');
+            $upload = $this->upload->do_upload('lab_info_image');
+            if ($upload == true) {
+                $data1 = array('upload_data' => $this->upload->data());
+                $image = $data1['upload_data']['file_name'];
+                $configBig = array();
+                $configBig['image_library'] = 'gd2';
+                $configBig['source_image'] = './assets/images/lab_info/' . $image;
+                $configBig['create_thumb'] = TRUE;
+                $configBig['maintain_ratio'] = FALSE;
+//                $configBig['width'] = 80;
+//                $configBig['height'] = 80;
+                $configBig['thumb_marker'] = "_big";
+                $this->image_lib->initialize($configBig);
+                $this->image_lib->resize();
+                $this->image_lib->clear();
+                unset($configBig);
+                $filename1 = $data1['upload_data']['raw_name'] . '_big' . $data1['upload_data']['file_ext'];
+                $rename = date('Ymd_his_') . $dept_id . ".jpg";
+                rename('./assets/images/lab_info/' . $filename1, './assets/images/lab_info/' . $rename);
+                unlink(FCPATH . "assets/images/lab_info/" . $image);
+                $lab_info_info['file_name'] = $rename;
+            }
+        } else {
+            unset($lab_info_info['file_name']);
+        }
+        /*image upload*/
+
+        if (!empty($_POST['lab_info_id'])) {
+            if ($_FILES['lab_info_image']['name'] !== '')
+                unlink(FCPATH . "/assets/images/lab_info/" . $this->common->getAnyInfoRow('tbl_lab_info', 'id', $_POST['lab_info_id'])->file_name);
+
+            $lab_info_info['updated'] = $this->common->getDateTime();
+            $this->db->where('id', $_POST['lab_info_id']);
+            $this->db->update('tbl_lab_info', $lab_info_info);
+            $this->session->set_flashdata('feedback', "Updated Successfully");
+            $this->session->set_flashdata('feedback_class', 'alert-success');
+            return redirect('admin/all_lab_info');
+        } else {
+            $lab_info_info['created'] = $this->common->getDateTime();
+            $this->db->insert('tbl_lab_info', $lab_info_info);
+
+            if ($this->db->insert_id() > 0) {
+                $this->session->set_flashdata('feedback', "Added Successfully");
+                $this->session->set_flashdata('feedback_class', 'alert-success');
+                return redirect('admin/all_lab_info');
+            } else {
+                $this->session->set_flashdata('feedback', "Added Failed");
+                $this->session->set_flashdata('feedback_class', 'alert-danger');
+            }
+        }
+    } else {
+        $this->session->set_flashdata('feedback', "Information Incomplete");
+        $this->session->set_flashdata('feedback_class', 'alert-danger');
+    }
+    return redirect('admin/lab_info_entry');
+}
