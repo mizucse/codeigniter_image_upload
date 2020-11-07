@@ -1,11 +1,23 @@
-<div class="form-group">
-    <div class="col-sm-6">
-        <label>Image:</label>
-        <input type="file" class="form-control" name="lab_info_image" id="lab_info_image">
+<form action="<?=base_url('admin/add_lab_info_entry')?>" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <div class="col-sm-6">
+            <label>Image:</label>
+            <input type="file" class="form-control" name="lab_info_image" id="lab_info_image">
+        </div>
+        <div class="col-sm-6" id="image-holder">
+            <?php if(!empty($info->file_name)):?>
+                <img src="<?=base_url('assets/images/lab_info/').$info->file_name?>" alt="">
+            <?php endif;?>
+        </div>
     </div>
-    <div class="col-sm-6" id="image-holder">
-        <?php if(!empty($info->file_name)):?>
-            <img src="<?=base_url('assets/images/lab_info/').$info->file_name?>" alt="">
-        <?php endif;?>
+    
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary">
+            <?php if(!empty($info)) {
+                echo "Update";
+            }else{
+                echo "Submit";
+            }?>
+        </button>
     </div>
-</div>
+</form>
